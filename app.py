@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import sqlite3
 import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder
@@ -127,10 +128,6 @@ def input():
         # Ensure columns are in the correct order after imputation
         full_test_df = full_test_df[full_feature_set]
 
-        # Add debug prints to check the preprocessed DataFrame
-        st.write("Preprocessed DataFrame:")
-        st.write(full_test_df)
-
         # Generate predictions
         if model_choice == "Random Forest":
             y_pred = rf_clf.predict(full_test_df)
@@ -139,15 +136,14 @@ def input():
         elif model_choice == "Ensembling":
             y_pred = voting_clf.predict(full_test_df)
 
-        # Add debug prints to check the predicted category
-        st.write(f"Raw Prediction: {y_pred}")
-        st.write(f"Predicted Category: {label_encoder.inverse_transform(y_pred)[0]}")
-
         # Display predicted category and attack type
         predicted_category, attack_type = predict_category_and_attack(full_test_df, model_choice)
         st.write(f"Predicted Category: {predicted_category}")
         if attack_type:
             st.write(f"Type of Attack: {attack_type}")
+
+        # Save user input and predicted results to SQLite database
+        save_to_database(test, predicted_category, attack_type)
 
         # Evaluate model metrics and display confusion matrix
         evaluate_model_metrics(y_pred, model_choice)
@@ -162,6 +158,21 @@ def input():
         elif model_choice == "Ensembling":
             st.write("### Ensembling Classification Report")
             st.json(voting_report)
+
+def save_to_database(inputs, predicted_category, attack_type):
+    conn = sqlite3.connect('predictions.db')
+    c = conn.cursor()
+
+    # Create table if not exists
+    c.execute('''CREATE TABLE IF NOT EXISTS predictions
+                 (duration REAL, protocol TEXT, service TEXT, flag TEXT, src_bytes REAL, predicted_category TEXT, attack_type TEXT)''')
+
+    # Insert a row of data
+    c.execute("INSERT INTO predictions VALUES (?, ?, ?, ?, ?, ?, ?)", (*inputs, predicted_category, attack_type))
+
+    # Commit changes and close connection
+    conn.commit()
+    conn.close()
 
 input()
 
