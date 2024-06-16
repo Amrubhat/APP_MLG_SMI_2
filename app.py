@@ -128,6 +128,10 @@ def input():
         # Ensure columns are in the correct order after imputation
         full_test_df = full_test_df[full_feature_set]
 
+        # Debug: Print the full_test_df to verify values
+        st.write("Processed Test Data")
+        st.dataframe(full_test_df)
+
         # Generate predictions
         if model_choice == "Random Forest":
             y_pred = rf_clf.predict(full_test_df)
