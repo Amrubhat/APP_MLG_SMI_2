@@ -103,7 +103,7 @@ show_predict_page()
 
 # Streamlit UI for user input and prediction
 def input():
-    st.title("Intrusion Detection System Prediction")
+    st.markdown("<h1 style='text-align: center;'>Intrusion Detection System</h1>", unsafe_allow_html=True)
 
     model_choice = st.selectbox("Choose a machine learning model", ["Random Forest", "Support Vector Machine", "Ensembling"])
 
